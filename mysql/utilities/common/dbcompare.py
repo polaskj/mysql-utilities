@@ -310,9 +310,27 @@ def get_common_objects(server1, server2, db1, db2,
             server2_str = "server2." + db2
         print_missing_list(in_db1_not_db2, server1_str, server2_str)
         print_missing_list(in_db2_not_db1, server2_str, server1_str)
-
-    return (in_both, in_db1_not_db2, in_db2_not_db1)
-
+        if in_db2_not_db1:
+            for item in in_db2_not_db1:
+                print 'DROP {0} `{1}`;'.format(item[0], item[1][0])
+        if in_db1_not_db2:
+            server1.exec_query("USE {0}".format(db1))
+            server1.exec_query("SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS")
+            server1.exec_query("SET FOREIGN_KEY_CHECKS=0")
+            for item in in_db1_not_db2:
+                if item[0] == 'PROCEDURE' or item[0] == 'TRIGGER':
+                    res = server1.exec_query("SHOW CREATE {0} `{1}`".format(item[0], item[1][0]))
+                    print 'DROP {0} IF EXISTS `{1}`;'.format(item[0],item[1][0])
+                    print 'DELIMITER //'
+                    print res[0][2]
+                    print '//'
+                    print 'delimiter ;'
+                elif item[0] == 'TABLE' or item[0] == 'VIEW':
+                    server1.exec_query("USE {0}".format(db1))
+                    res = server1.exec_query("SHOW CREATE {0} {1}".format(item[0], item[1][0]))
+                    print res[0][1] + ';'
+            server1.exec_query("SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS")
+        return (in_both, in_db1_not_db2, in_db2_not_db1)
 
 def _get_diff(list1, list2, object1, object2, difftype, compact=False):
     """Get the difference among two lists.
