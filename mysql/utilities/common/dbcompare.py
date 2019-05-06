@@ -22,6 +22,7 @@ This file contains the methods for checking consistency among two databases.
 import re
 import tempfile
 import difflib
+import os
 
 from mysql.utilities.exception import UtilError, UtilDBError
 from mysql.utilities.common.format import print_list, get_col_widths
@@ -308,8 +309,20 @@ def get_common_objects(server1, server2, db1, db2,
             server2_str = "server1." + db2
         else:
             server2_str = "server2." + db2
+
         print_missing_list(in_db1_not_db2, server1_str, server2_str)
         print_missing_list(in_db2_not_db1, server2_str, server1_str)
+
+        create_obj_src_dir = options.get('create_obj_src_dir')
+        if create_obj_src_dir:
+            if not os.path.isdir(create_obj_src_dir):
+                raise UtilError("Base directory {0} does not exist.".format(create_obj_src_dir))
+            for item in in_db1_not_db2:
+                print 'DROP {0} `{1}`;'.format(item[0], item[1][0])
+
+            for item in in_db2_not_db1:
+                with open('{0}/{1}/{2}.sql'.format(create_obj_src_dir, item[0], item[1][0]), 'r') as fin:
+                    print fin.read()
 
     return (in_both, in_db1_not_db2, in_db2_not_db1)
 

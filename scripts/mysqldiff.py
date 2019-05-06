@@ -196,6 +196,11 @@ if __name__ == '__main__':
                       help="skip check of all table options (e.g., "
                            "AUTO_INCREMENT, ENGINE, CHARSET, etc.).")
 
+    # Create objects based on source
+    parser.add_option("--create-obj-src-dir", action="store",
+                      dest="create_obj_src_dir", type="string", default=".",
+                      help="Base directory to source DB objects that need to be created")
+
     # Add verbosity and quiet (silent) mode
     add_verbosity(parser, True)
 
@@ -229,6 +234,7 @@ if __name__ == '__main__':
         "skip_table_opts": opt.skip_tbl_opts,
         "compact": opt.compact,
         "charset": opt.charset,
+        "create_obj_src_dir": opt.create_obj_src_dir,
     }
 
     # add ssl options values.
